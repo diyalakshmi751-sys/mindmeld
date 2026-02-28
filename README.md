@@ -13,7 +13,7 @@
 - Member 2: DIYALAKSHMI - AHALIA SCHOOL OF ENGINEERING AND TECHNOLOGY
 
 ### Hosted Project Link
-[mention your project hosted link here]
+https://mindmeld-green.vercel.app/index.html
 
 ### Project Description
 EcoSort Vision is an AI-based system that uses a webcam to identify and sort waste automatically. It helps improve recycling, reduce pollution, and encourages eco-friendly behavior through a points-based reward system.
