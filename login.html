@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — EcoSort Vision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #00e07b; --green-dim: #00b562; --bg: #080f0a; --bg2: #0d1a10;
+      --bg3: #111f14; --surface2: rgba(255,255,255,0.06);
+      --border: rgba(0,224,123,0.15); --text: #e8f5ec; --text-muted: #7a9e84;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: 0.4; }
+    .page-wrapper { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+    .left-panel { flex: 1; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; padding: 48px 56px; position: relative; overflow: hidden; }
+    @media (max-width: 900px) { .left-panel { display: none; } }
+    .left-panel::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(0,224,123,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,224,123,0.04) 1px, transparent 1px); background-size: 50px 50px; mask-image: radial-gradient(ellipse at 30% 60%, black 20%, transparent 75%); }
+    .left-panel::after { content: ''; position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,224,123,0.1) 0%, transparent 65%); bottom: -100px; left: -100px; border-radius: 50%; filter: blur(60px); pointer-events: none; animation: blobFloat 8s ease-in-out infinite; }
+    @keyframes blobFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    .left-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--green); text-decoration: none; position: relative; z-index: 1; }
+    .left-logo span { color: var(--text); }
+    .left-content { position: relative; z-index: 1; }
+    .left-content h2 { font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 20px; }
+    .left-content h2 span { color: var(--green); }
+    .left-content p { color: var(--text-muted); font-size: 1rem; line-height: 1.75; max-width: 340px; margin-bottom: 48px; }
+    .testimonial-card { background: rgba(0,224,123,0.04); border: 1px solid var(--border); border-radius: 18px; padding: 28px 28px 24px; max-width: 380px; }
+    .testimonial-text { font-size: 0.95rem; color: var(--text); line-height: 1.75; font-style: italic; margin-bottom: 20px; opacity: 0.9; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--green), var(--bg3)); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; border: 1px solid rgba(0,224,123,0.3); }
+    .author-info .name { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+    .author-info .role { font-size: 0.8rem; color: var(--text-muted); }
+    .left-footer { position: relative; z-index: 1; font-size: 0.82rem; color: var(--text-muted); }
+    .right-panel { width: 520px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 48px 40px; position: relative; }
+    @media (max-width: 900px) { .right-panel { width: 100%; padding: 32px 24px; min-height: 100vh; } }
+    .right-panel::before { content: ''; position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(0,224,123,0.07) 0%, transparent 65%); top: -150px; right: -100px; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+    .form-box { width: 100%; max-width: 400px; position: relative; z-index: 1; animation: formIn 0.6s cubic-bezier(0.4,0,0.2,1) both; }
+    @keyframes formIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .mobile-logo { display: none; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--green); margin-bottom: 40px; text-align: center; }
+    .mobile-logo span { color: var(--text); }
+    @media (max-width: 900px) { .mobile-logo { display: block; } }
+    .form-header { margin-bottom: 36px; }
+    .form-tag { display: inline-flex; align-items: center; gap: 7px; background: rgba(0,224,123,0.08); border: 1px solid var(--border); padding: 5px 13px; border-radius: 100px; font-size: 0.78rem; font-weight: 600; color: var(--green); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 18px; }
+    .dot-live { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .form-header h1 { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 10px; }
+    .form-header p { color: var(--text-muted); font-size: 0.95rem; }
+    .tabs { display: flex; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 32px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 600; border-radius: 9px; cursor: pointer; transition: var(--transition); }
+    .tab-btn.active { background: var(--green); color: #061009; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
+    .input-wrap { position: relative; }
+    .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; opacity: 0.6; }
+    input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 14px 16px 14px 44px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.98rem; transition: var(--transition); outline: none; }
+    input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(0,224,123,0.1); background: rgba(0,224,123,0.02); }
+    input::placeholder { color: rgba(122,158,132,0.5); }
+    .toggle-pw { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem; padding: 4px; transition: color 0.2s; }
+    .toggle-pw:hover { color: var(--text); }
+    .form-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; color: var(--text-muted); }
+    .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; padding: 0; accent-color: var(--green); }
+    .forgot-link { font-size: 0.88rem; color: var(--green); text-decoration: none; font-weight: 500; }
+    .forgot-link:hover { opacity: 0.75; }
+    .btn-submit { width: 100%; padding: 15px; background: var(--green); color: #061009; border: none; border-radius: 12px; font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+    .btn-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%); }
+    .btn-submit:hover { background: #00f085; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,224,123,0.35); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .divider { display: flex; align-items: center; gap: 14px; margin: 24px 0; }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+    .social-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    .btn-social { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: var(--transition); }
+    .btn-social:hover { background: var(--surface2); border-color: rgba(0,224,123,0.3); transform: translateY(-1px); }
+    .social-icon { font-size: 1.1rem; }
+    .switch-link { text-align: center; font-size: 0.88rem; color: var(--text-muted); margin-top: 24px; }
+    .switch-link a { color: var(--green); font-weight: 600; text-decoration: none; }
+    .switch-link a:hover { text-decoration: underline; }
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+    .back-link { position: absolute; top: 32px; left: 32px; display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.2s; z-index: 2; }
+    .back-link:hover { color: var(--text); }
+    .field-error { font-size: 0.8rem; color: #ef4444; margin-top: 6px; display: none; }
+    .field-error.show { display: block; }
+    .alert { padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; margin-bottom: 20px; display: none; }
+    .alert.success { background: rgba(0,224,123,0.1); border: 1px solid rgba(0,224,123,0.2); color: var(--green); }
+    .alert.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; }
+    .alert.show { display: block; }
+    .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
+    .strength-seg { flex: 1; height: 3px; border-radius: 99px; background: var(--border); transition: background 0.3s; }
+    .strength-seg.weak { background: #ef4444; }
+    .strength-seg.medium { background: #f59e0b; }
+    .strength-seg.strong { background: var(--green); }
+    .strength-label { font-size: 0.78rem; margin-top: 4px; color: var(--text-muted); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,224,123,0.3); border-radius: 99px; }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <div class="left-panel">
+    <a href="index.html" class="left-logo">Eco<span>Sort</span></a>
+    <div class="left-content">
+      <h2>Planet-friendly<br>starts <span>here.</span></h2>
+      <p>Join thousands sorting smarter with AI-powered waste classification. Every correct sort makes a difference.</p>
+      <div class="testimonial-card">
+        <p class="testimonial-text">"EcoSort Vision made recycling effortless in our office. The AI is incredibly accurate and the points system keeps everyone motivated!"</p>
+        <div class="testimonial-author">
+          <div class="avatar">🌱</div>
+          <div class="author-info">
+            <div class="name">Priya Menon</div>
+            <div class="role">Sustainability Lead, GreenTech</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="left-footer">© 2026 EcoSort Vision</div>
+  </div>
+
+  <div class="right-panel">
+    <a href="index.html" class="back-link">← Back to home</a>
+    <div class="form-box" id="auth-wrapper">
+      <div class="mobile-logo">Eco<span>Sort</span></div>
+      <div class="form-header" id="form-header">
+        <div class="form-tag"><span class="dot-live"></span> Secure Login</div>
+        <h1>Welcome back</h1>
+        <p>Sign in to your EcoSort account</p>
+      </div>
+      <div id="alert-box" class="alert"></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('login', this)">Sign In</button>
+        <button class="tab-btn" onclick="switchTab('signup', this)">Create Account</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="panel-login" class="form-panel active">
+        <div class="social-btns">
+          <button class="btn-social" onclick="handleSocial('Google')"><span class="social-icon">🔵</span> Google</button>
+          <button class="btn-social" onclick="handleSocial('GitHub')"><span class="social-icon">⚫</span> GitHub</button>
+        </div>
+        <div class="divider"><div class="divider-line"></div><span class="divider-text">or continue with email</span><div class="divider-line"></div></div>
+        <div class="form-group">
+          <label for="login-email">Email address</label>
+          <div class="input-wrap"><span class="input-icon">✉️</span><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" /></div>
+          <div class="field-error" id="err-login-email">Please enter your email.</div>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="input-wrap"><span class="input-icon">🔒</span><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" /><button type="button" class="toggle-pw" onclick="togglePw('login-password', this)">👁️</button></div>
+          <div class="field-error" id="err-login-password">Please enter your password.</div>
+        </div>
+        <div class="form-row">
+          <label class="checkbox-label"><input type="checkbox" id="remember-me" /> Remember me</label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+        <button class="btn-submit" id="login-btn" onclick="handleLogin()">Sign In →</button>
+        <div class="switch-link">Don't have an account? <a href="#" onclick="switchTabByName('signup'); return false;">Create one</a></div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="panel-signup" class="form-panel">
+        <div class="social-btns">
+          <button class="btn-social" onclick="handleSocial('Google')"><span class="social-icon">🔵</span> Google</button>
+          <button class="btn-social" onclick="handleSocial('GitHub')"><span class="social-icon">⚫</span> GitHub</button>
+        </div>
+        <div class="divider"><div class="divider-line"></div><span class="divider-text">or register with email</span><div class="divider-line"></div></div>
+        <div class="form-group">
+          <label for="signup-name">Full name</label>
+          <div class="input-wrap"><span class="input-icon">👤</span><input type="text" id="signup-name" placeholder="Your name" autocomplete="name" /></div>
+          <div class="field-error" id="err-signup-name">Name is required.</div>
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Email address</label>
+          <div class="input-wrap"><span class="input-icon">✉️</span><input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" /></div>
+          <div class="field-error" id="err-signup-email">Please enter an email.</div>
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <div class="input-wrap"><span class="input-icon">🔒</span><input type="password" id="signup-password" placeholder="Any password works" autocomplete="new-password" oninput="checkStrength(this.value)" /><button type="button" class="toggle-pw" onclick="togglePw('signup-password', this)">👁️</button></div>
+          <div class="strength-bar"><div class="strength-seg" id="seg1"></div><div class="strength-seg" id="seg2"></div><div class="strength-seg" id="seg3"></div><div class="strength-seg" id="seg4"></div></div>
+          <div class="strength-label" id="strength-label"></div>
+          <div class="field-error" id="err-signup-password">Please enter a password.</div>
+        </div>
+        <button class="btn-submit" id="signup-btn" onclick="handleSignup()" style="margin-top:8px;">Create Account →</button>
+        <div class="switch-link">Already have an account? <a href="#" onclick="switchTabByName('login'); return false;">Sign in</a></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    clearAlert();
+    const h1 = document.querySelector('#form-header h1');
+    const sub = document.querySelector('#form-header p');
+    const tag = document.querySelector('.form-tag');
+    if (name === 'login') {
+      h1.textContent = 'Welcome back'; sub.textContent = 'Sign in to your EcoSort account';
+      tag.innerHTML = '<span class="dot-live"></span> Secure Login';
+    } else {
+      h1.textContent = 'Join EcoSort'; sub.textContent = 'Start sorting smarter today';
+      tag.innerHTML = '<span class="dot-live"></span> Free Account';
+    }
+  }
+
+  function switchTabByName(name) {
+    switchTab(name, document.querySelectorAll('.tab-btn')[name === 'login' ? 0 : 1]);
+  }
+
+  function togglePw(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁️'; }
+  }
+
+  function checkStrength(val) {
+    const segs = ['seg1','seg2','seg3','seg4'].map(id => document.getElementById(id));
+    const label = document.getElementById('strength-label');
+    segs.forEach(s => s.className = 'strength-seg');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = ['weak','weak','medium','strong','strong'];
+    const labels = ['','Weak','Fair','Good','Strong'];
+    for (let i = 0; i < score; i++) segs[i].classList.add(levels[score] || '');
+    label.textContent = val.length ? labels[score] : '';
+    label.style.color = score >= 3 ? 'var(--green)' : score === 2 ? '#f59e0b' : '#ef4444';
+  }
+
+  function showError(id, show) { document.getElementById(id)?.classList.toggle('show', show); }
+  function showAlert(msg, type) { const b = document.getElementById('alert-box'); b.textContent = msg; b.className = `alert ${type} show`; }
+  function clearAlert() { document.getElementById('alert-box').className = 'alert'; }
+
+  // Save session and redirect to index.html
+  function goToApp(userIdentifier) {
+    const name = userIdentifier.includes('@') ? userIdentifier.split('@')[0] : userIdentifier;
+    sessionStorage.setItem('ecosort_user', name);
+    sessionStorage.setItem('ecosort_points', '240');
+    sessionStorage.setItem('ecosort_sorts', '18');
+    window.location.href = 'index.html';
+  }
+
+  function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    let valid = true;
+    showError('err-login-email', false); showError('err-login-password', false); clearAlert();
+    if (!email) { showError('err-login-email', true); valid = false; }
+    if (!password) { showError('err-login-password', true); valid = false; }
+    if (!valid) return;
+    const btn = document.getElementById('login-btn');
+    btn.textContent = 'Signing in…'; btn.disabled = true;
+    setTimeout(() => {
+      showAlert('✅ Signed in! Redirecting…', 'success');
+      setTimeout(() => goToApp(email), 700);
+    }, 900);
+  }
+
+  function handleSignup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    let valid = true;
+    showError('err-signup-name', false); showError('err-signup-email', false); showError('err-signup-password', false); clearAlert();
+    if (!name) { showError('err-signup-name', true); valid = false; }
+    if (!email) { showError('err-signup-email', true); valid = false; }
+    if (!password) { showError('err-signup-password', true); valid = false; }
+    if (!valid) return;
+    const btn = document.getElementById('signup-btn');
+    btn.textContent = 'Creating account…'; btn.disabled = true;
+    setTimeout(() => {
+      showAlert('🎉 Account created! Redirecting…', 'success');
+      setTimeout(() => goToApp(name || email), 700);
+    }, 900);
+  }
+
+  function handleSocial(provider) {
+    showAlert(`Connecting to ${provider}…`, 'success');
+    setTimeout(() => goToApp(provider + ' User'), 1000);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    document.getElementById('panel-login').classList.contains('active') ? handleLogin() : handleSignup();
+  });
+</script>
+</body>
+</html>

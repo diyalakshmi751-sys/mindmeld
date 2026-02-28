@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EcoSort Vision — Smart Waste Sorting</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+  <style>
+    :root {
+      --green: #d1e000; --green-dim: #00b562; --green-glow: rgba(0,224,123,0.18);
+      --bg: #080f0a; --bg2: #0d1a10; --bg3: #111f14;
+      --surface: rgba(255,255,255,0.03); --surface2: rgba(255,255,255,0.06);
+      --border: rgba(0,224,123,0.15); --text: #e8f5ec; --text-muted: #7a9e84;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: 0.4; }
+    .container { max-width: 1180px; margin: 0 auto; padding: 0 28px; position: relative; z-index: 1; }
+
+    /* ── NAV ── */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 0; border-bottom: 1px solid transparent; transition: var(--transition); }
+    nav.scrolled { background: rgba(8,15,10,0.88); backdrop-filter: blur(20px); border-bottom-color: var(--border); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--green); letter-spacing: -0.5px; }
+    .nav-logo span { color: var(--text); }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 500; padding: 8px 16px; border-radius: 8px; transition: var(--transition); }
+    .nav-link:hover { color: var(--text); background: var(--surface2); }
+
+    /* ── USER PILL (shown when logged in) ── */
+    .user-pill {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,224,123,0.07);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px 6px 8px;
+    }
+    .user-pill.visible { display: flex; }
+    .user-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #061009;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+    }
+    .user-name-nav { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+    .user-points-nav { font-size: 0.82rem; color: var(--green); font-weight: 700; font-family: 'Syne', sans-serif; }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-logout:hover { color: var(--text); border-color: rgba(0,224,123,0.4); background: var(--surface2); }
+
+    /* ── WELCOME TOAST ── */
+    .welcome-toast {
+      display: none;
+      position: fixed;
+      top: 90px; right: 28px;
+      background: var(--bg3);
+      border: 1px solid rgba(0,224,123,0.3);
+      border-radius: 14px;
+      padding: 16px 20px;
+      z-index: 200;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 40px rgba(0,224,123,0.08);
+      animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      max-width: 280px;
+    }
+    .welcome-toast.show { display: block; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .toast-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--green); margin-bottom: 4px; }
+    .toast-body { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* ── HERO ── */
+    .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 100px; overflow: hidden; }
+    .hero-blob { position: absolute; border-radius: 50%; filter: blur(120px); pointer-events: none; }
+    .blob-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,224,123,0.12) 0%, transparent 70%); top: -100px; right: -150px; animation: blobFloat 8s ease-in-out infinite; }
+    .blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(0,181,98,0.08) 0%, transparent 70%); bottom: 50px; left: -100px; animation: blobFloat 10s ease-in-out infinite reverse; }
+    @keyframes blobFloat { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-30px) scale(1.05); } }
+    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,224,123,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,224,123,0.04) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%); }
+    .hero-content { position: relative; z-index: 2; max-width: 780px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,224,123,0.08); border: 1px solid var(--border); padding: 7px 16px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; color: var(--green); margin-bottom: 32px; letter-spacing: 0.3px; }
+    .badge-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(3.8rem, 9vw, 7rem); font-weight: 800; line-height: 0.95; letter-spacing: -3px; margin-bottom: 28px; }
+    .hero h1 .line-highlight { color: var(--green); position: relative; display: inline-block; }
+    .hero-desc { font-size: clamp(1.05rem, 2.5vw, 1.25rem); color: var(--text-muted); max-width: 500px; margin-bottom: 48px; font-weight: 300; line-height: 1.75; }
+    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 32px; border-radius: 12px; font-weight: 600; font-size: 1rem; font-family: 'DM Sans', sans-serif; text-decoration: none; transition: var(--transition); cursor: pointer; border: none; position: relative; overflow: hidden; }
+    .btn::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0); transition: background 0.2s; }
+    .btn:hover::after { background: rgba(255,255,255,0.05); }
+    .btn-primary { background: var(--green); color: #061009; box-shadow: 0 0 40px rgba(0,224,123,0.25); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(0,224,123,0.4); background: #00f085; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); border-color: rgba(0,224,123,0.3); }
+
+    /* ── STATS BAR ── */
+    .stats-bar { padding: 48px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0; }
+    .stat-item { text-align: center; padding: 16px 24px; position: relative; }
+    .stat-item:not(:last-child)::after { content: ''; position: absolute; right: 0; top: 15%; bottom: 15%; width: 1px; background: var(--border); }
+    .stat-num { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; color: var(--green); line-height: 1; margin-bottom: 6px; }
+    .stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 400; letter-spacing: 0.3px; }
+
+    /* ── HOW IT WORKS ── */
+    .how-it-works { padding: clamp(100px, 14vh, 160px) 0; }
+    .section-eyebrow { font-size: 0.8rem; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--green); margin-bottom: 16px; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 80px; color: var(--text); }
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2px; }
+    .step-card { background: var(--bg3); padding: 40px 32px 36px; position: relative; transition: var(--transition); border: 1px solid var(--border); overflow: hidden; }
+    .step-card:first-child { border-radius: 20px 0 0 20px; }
+    .step-card:last-child { border-radius: 0 20px 20px 0; }
+    @media (max-width: 700px) { .step-card:first-child { border-radius: 20px 20px 0 0; } .step-card:last-child { border-radius: 0 0 20px 20px; } }
+    .step-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 120%, rgba(0,224,123,0.07) 0%, transparent 65%); opacity: 0; transition: opacity 0.4s; }
+    .step-card:hover::before { opacity: 1; }
+    .step-card:hover { border-color: rgba(0,224,123,0.35); }
+    .step-icon { width: 52px; height: 52px; background: rgba(0,224,123,0.1); border: 1px solid rgba(0,224,123,0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 28px; }
+    .step-num-tag { position: absolute; top: 32px; right: 32px; font-family: 'Syne', sans-serif; font-size: 3.5rem; font-weight: 800; color: rgba(0,224,123,0.07); line-height: 1; letter-spacing: -2px; user-select: none; }
+    .step-card h3 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 12px; letter-spacing: -0.5px; }
+    .step-card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; }
+
+    /* ── FEATURE ── */
+    .feature-section { padding: clamp(80px,10vh,120px) 0; border-top: 1px solid var(--border); }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    @media (max-width: 800px) { .feature-grid { grid-template-columns: 1fr; gap: 48px; } }
+    .feature-visual { background: var(--bg3); border: 1px solid var(--border); border-radius: 24px; padding: 40px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .feature-visual::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(0,224,123,0.06) 0%, transparent 70%); }
+    .scan-anim { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
+    .scan-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(0,224,123,0.2); animation: ringPulse 3s ease-in-out infinite; }
+    .scan-ring:nth-child(1) { width: 80px; height: 80px; animation-delay: 0s; }
+    .scan-ring:nth-child(2) { width: 140px; height: 140px; animation-delay: 0.5s; }
+    .scan-ring:nth-child(3) { width: 200px; height: 200px; animation-delay: 1s; }
+    .scan-ring:nth-child(4) { width: 260px; height: 260px; animation-delay: 1.5s; }
+    @keyframes ringPulse { 0% { opacity: 0.8; transform: scale(0.95); } 50% { opacity: 0.3; transform: scale(1.05); } 100% { opacity: 0.8; transform: scale(0.95); } }
+    .scan-center { width: 60px; height: 60px; background: rgba(0,224,123,0.15); border: 2px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; position: relative; z-index: 1; animation: centerPulse 2s ease-in-out infinite; box-shadow: 0 0 30px rgba(0,224,123,0.3); }
+    @keyframes centerPulse { 0%, 100% { box-shadow: 0 0 20px rgba(0,224,123,0.3); } 50% { box-shadow: 0 0 50px rgba(0,224,123,0.6); } }
+    .scan-line { position: absolute; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, var(--green), transparent); animation: scanMove 2.5s ease-in-out infinite; box-shadow: 0 0 8px var(--green); }
+    @keyframes scanMove { 0% { top: 20%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 80%; opacity: 0; } }
+    .feature-text .section-title { margin-bottom: 24px; }
+    .feature-bullets { list-style: none; margin-top: 32px; display: flex; flex-direction: column; gap: 16px; }
+    .feature-bullets li { display: flex; align-items: flex-start; gap: 14px; font-size: 0.98rem; color: var(--text-muted); }
+    .bullet-icon { width: 22px; height: 22px; background: rgba(0,224,123,0.12); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 0.75rem; }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 60px 0 40px; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--green); font-size: 1.1rem; }
+    .footer-copy { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* ── MODAL ── */
+    .modal { display: none; position: fixed; z-index: 1000; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 24px; }
+    .modal.open { display: flex; }
+    .modal-content { background: var(--bg2); border: 1px solid var(--border); border-radius: 28px; padding: 48px 40px; width: 100%; max-width: 620px; position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 80px rgba(0,224,123,0.06); animation: modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .close { position: absolute; right: 24px; top: 20px; width: 36px; height: 36px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; color: var(--text-muted); transition: var(--transition); line-height: 1; }
+    .close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .modal-content h2 { font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+    .modal-content > p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 28px; }
+    #webcam-container { margin: 24px auto; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); display: block; text-align: center; background: var(--bg3); }
+    #webcam-container canvas { display: block; margin: 0 auto; }
+    #label-container { margin-top: 20px; }
+    #label-container > div { background: var(--surface); border: 1px solid var(--border); padding: 12px 18px; border-radius: 12px; margin: 8px 0; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    #label-container > div span:first-child { font-weight: 600; color: var(--text); }
+    #label-container > div span:last-child { color: var(--green); font-weight: 700; font-family: 'Syne', sans-serif; }
+    .predictions > div { background: var(--surface); border: 1px solid var(--border); padding: 14px 18px; border-radius: 12px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+    .class-name { font-weight: 600; color: var(--text); }
+    .confidence { font-weight: 700; font-family: 'Syne', sans-serif; min-width: 60px; text-align: right; }
+    .confidence.high { color: var(--green); }
+    .confidence.medium { color: #f59e0b; }
+    .confidence.low { color: #ef4444; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,224,123,0.3); border-radius: 99px; }
+
+    .fade-up { opacity: 0; transform: translateY(30px); animation: fadeUp 0.8s cubic-bezier(0.4,0,0.2,1) forwards; }
+    .fade-up:nth-child(1) { animation-delay: 0.1s; }
+    .fade-up:nth-child(2) { animation-delay: 0.25s; }
+    .fade-up:nth-child(3) { animation-delay: 0.4s; }
+    .fade-up:nth-child(4) { animation-delay: 0.55s; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 640px) {
+      .hero h1 { letter-spacing: -2px; }
+      .hero-cta { flex-direction: column; align-items: flex-start; }
+      .btn { width: 100%; justify-content: center; }
+      .modal-content { padding: 36px 24px; }
+      .steps-grid .step-card:first-child { border-radius: 20px 20px 0 0; }
+      .steps-grid .step-card:last-child { border-radius: 0 0 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav id="main-nav">
+  <div class="container">
+    <div class="nav-inner">
+      <div class="nav-logo">Eco<span>Sort</span></div>
+      <div class="nav-links" id="nav-links">
+        <a href="#how" class="nav-link">How it works</a>
+        <!-- Logged-out state -->
+        <a href="login.html" class="btn btn-primary" id="nav-login-btn" style="padding: 10px 22px; font-size: 0.9rem;">Get Started →</a>
+        <!-- Logged-in state (hidden by default) -->
+        <div class="user-pill" id="user-pill">
+          <div class="user-avatar" id="nav-avatar">?</div>
+          <span class="user-name-nav" id="nav-username">User</span>
+          <span class="user-points-nav" id="nav-points">240pts</span>
+        </div>
+        <button class="btn-logout" id="nav-logout-btn" style="display:none;" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── WELCOME TOAST ── -->
+<div class="welcome-toast" id="welcome-toast">
+  <div class="toast-title">👋 Welcome back, <span id="toast-name">User</span>!</div>
+  <div class="toast-body">You have <span id="toast-points">240</span> points. Keep sorting! ♻️</div>
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-blob blob-1"></div>
+  <div class="hero-blob blob-2"></div>
+  <div class="hero-grid"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge fade-up"><span class="badge-dot"></span> AI-Powered Waste Intelligence</div>
+      <h1 class="fade-up">Sort smarter.<br><span class="line-highlight">Live greener.</span></h1>
+      <p class="hero-desc fade-up">EcoSort Vision uses real-time AI to identify and sort waste automatically — turning every discarded item into a step toward a cleaner planet.</p>
+      <div class="hero-cta fade-up">
+        <a href="login.html" class="btn btn-primary" id="hero-cta-btn">Get Started →</a>
+        <button onclick="openDemo()" class="btn btn-ghost">▶ Try AI Demo</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item"><div class="stat-num">98%</div><div class="stat-label">Detection Accuracy</div></div>
+      <div class="stat-item"><div class="stat-num">0.3s</div><div class="stat-label">Classification Speed</div></div>
+      <div class="stat-item"><div class="stat-num">8+</div><div class="stat-label">Waste Categories</div></div>
+      <div class="stat-item"><div class="stat-num" id="live-points">10pts</div><div class="stat-label">Per Correct Sort</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="how-it-works" id="how">
+  <div class="container">
+    <p class="section-eyebrow">The Process</p>
+    <h2 class="section-title">Zero effort.<br>Maximum impact.</h2>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-icon">🗑️</div><div class="step-num-tag">01</div><h3>Throw Waste</h3><p>Simply dispose of your item in the bin. No labels, no sorting — just drop it in.</p></div>
+      <div class="step-card"><div class="step-icon">🔍</div><div class="step-num-tag">02</div><h3>AI Detects</h3><p>High-res camera + neural network instantly identifies plastic, paper, metal, organic, and more.</p></div>
+      <div class="step-card"><div class="step-icon">⚡</div><div class="step-num-tag">03</div><h3>Auto Sorts</h3><p>The item is guided to the correct compartment in under a second. Zero manual effort.</p></div>
+      <div class="step-card"><div class="step-icon">🏆</div><div class="step-num-tag">04</div><h3>Earn Points</h3><p>Correct sorts earn +10 points. Mistakes trigger a friendly tip. Gamified for everyone.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURE ── -->
+<section class="feature-section">
+  <div class="container">
+    <div class="feature-grid">
+      <div class="feature-visual">
+        <div class="scan-anim">
+          <div class="scan-ring"></div><div class="scan-ring"></div>
+          <div class="scan-ring"></div><div class="scan-ring"></div>
+          <div class="scan-center">♻️</div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+      <div class="feature-text">
+        <p class="section-eyebrow">Real-Time Vision</p>
+        <h2 class="section-title">See it.<br>Know it.<br>Sort it.</h2>
+        <p style="color:var(--text-muted);font-size:0.98rem;line-height:1.8;">Our on-device model runs inference at 30fps — no cloud lag, no privacy concerns. Just instant, accurate classification.</p>
+        <ul class="feature-bullets">
+          <li><span class="bullet-icon">✓</span>Teachable Machine model runs entirely in-browser</li>
+          <li><span class="bullet-icon">✓</span>Live confidence scores for every category</li>
+          <li><span class="bullet-icon">✓</span>Works on any device with a webcam</li>
+          <li><span class="bullet-icon">✓</span>No data ever leaves your device</li>
+        </ul>
+        <div style="margin-top:36px;">
+          <button onclick="openDemo()" class="btn btn-primary">Try It Live →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo">EcoSort Vision</div>
+      <div class="footer-copy">© 2026 EcoSort Vision — Sorting for a cleaner tomorrow</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── DEMO MODAL ── -->
+<div id="demo-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">×</span>
+    <h2>AI Waste Demo</h2>
+    <p>Point your camera at paper, plastic, or metal to see classification live.</p>
+    <button type="button" class="btn btn-primary" onclick="init()" style="width:100%;">Start Camera</button>
+    <div id="webcam-container"></div>
+    <div id="label-container" class="predictions"></div>
+  </div>
+</div>
+
+<script>
+  // ── NAV SCROLL ──
+  window.addEventListener('scroll', () => {
+    document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  // ── CLOSE MODAL ON OUTSIDE CLICK ──
+  document.getElementById('demo-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // ── CHECK LOGIN SESSION ──
+  (function checkSession() {
+    const user = sessionStorage.getItem('ecosort_user');
+    const points = sessionStorage.getItem('ecosort_points') || '240';
+    if (!user) return;
+
+    // Update nav
+    document.getElementById('nav-login-btn').style.display = 'none';
+    const pill = document.getElementById('user-pill');
+    pill.classList.add('visible');
+    document.getElementById('nav-avatar').textContent = user.charAt(0).toUpperCase();
+    document.getElementById('nav-username').textContent = user;
+    document.getElementById('nav-points').textContent = points + ' pts';
+    document.getElementById('nav-logout-btn').style.display = 'block';
+
+    // Update hero CTA
+    const heroCta = document.getElementById('hero-cta-btn');
+    heroCta.textContent = '▶ Try AI Demo';
+    heroCta.href = '#';
+    heroCta.onclick = openDemo;
+
+    // Show welcome toast
+    document.getElementById('toast-name').textContent = user;
+    document.getElementById('toast-points').textContent = points;
+    const toast = document.getElementById('welcome-toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+  })();
+
+  // ── LOGOUT ──
+  function logout() {
+    sessionStorage.removeItem('ecosort_user');
+    sessionStorage.removeItem('ecosort_points');
+    sessionStorage.removeItem('ecosort_sorts');
+    window.location.reload();
+  }
+
+  // ── MODAL ──
+  let model = null, webcam = null;
+  const MODEL_FOLDER = "./models/";
+
+  function openDemo() {
+    document.getElementById('demo-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('demo-modal').classList.remove('open');
+    if (webcam) { try { webcam.stop(); } catch(e) {} webcam = null; }
+    document.getElementById('label-container').innerHTML = '';
+    document.getElementById('webcam-container').innerHTML = '';
+  }
+
+  async function init() {
+    const webcamContainer = document.getElementById("webcam-container");
+    const labelCont = document.getElementById("label-container");
+    try {
+      labelCont.innerHTML = '<div style="padding:20px;background:rgba(0,224,123,0.07);border:1px solid rgba(0,224,123,0.2);border-radius:12px;text-align:center;font-weight:500;color:#00e07b;">Loading model… please wait</div>';
+      model = await tmImage.load(MODEL_FOLDER + "model.json", MODEL_FOLDER + "metadata.json");
+      webcam = new tmImage.Webcam(400, 300, true);
+      await webcam.setup();
+      await webcam.play();
+      window.requestAnimationFrame(loop);
+      webcamContainer.innerHTML = "";
+      webcamContainer.appendChild(webcam.canvas);
+      labelCont.innerHTML = `
+        <div id="top-prediction" style="font-size:1.5rem;font-weight:700;margin:20px 0;padding:16px;background:rgba(0,224,123,0.06);border:1px solid rgba(0,224,123,0.2);border-radius:14px;text-align:center;min-height:72px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;">
+          Waiting for first prediction…
+        </div>
+        <div id="all-predictions" style="margin-top:20px;"></div>`;
+    } catch (error) {
+      let msg = "Failed to start demo:\n" + error.message;
+      if (error.message?.includes("404")) msg += "\n\nModel files not found at " + MODEL_FOLDER;
+      else if (error.name === "NotAllowedError") msg += "\n\nCamera access denied.";
+      else if (error.name === "NotFoundError") msg += "\n\nNo camera detected.";
+      alert(msg);
+      labelCont.innerHTML = '<div style="color:#ef4444;padding:20px;text-align:center;">Error loading demo. See console.</div>';
+    }
+  }
+
+  async function loop() {
+    if (webcam) { webcam.update(); await predict(); }
+    window.requestAnimationFrame(loop);
+  }
+
+  async function predict() {
+    if (!model || !webcam) return;
+    try {
+      const predictions = await model.predict(webcam.canvas);
+      let topClass = "Uncertain", topProb = 0;
+      predictions.forEach(p => { if (p.probability > topProb) { topProb = p.probability; topClass = p.className; } });
+      const topEl = document.getElementById("top-prediction");
+      if (topEl) {
+        const topPercent = Math.round(topProb * 100);
+        let emoji = "❓", color = "var(--text-muted)";
+        if (topProb > 0.80) { emoji = "✅"; color = "var(--green)"; }
+        else if (topProb > 0.50) { emoji = "⚠️"; color = "#f59e0b"; }
+        topEl.innerHTML = `${emoji} <span style="color:${color};">${topClass}</span> <span style="font-size:1rem;color:var(--text-muted);">(${topPercent}%)</span>`;
+      }
+      const allCont = document.getElementById("all-predictions");
+      if (allCont) {
+        allCont.innerHTML = "";
+        predictions.forEach(pred => {
+          const percent = (pred.probability * 100).toFixed(1);
+          let barColor = "rgba(255,255,255,0.1)";
+          if (percent > 80) barColor = "#00e07b";
+          else if (percent > 50) barColor = "#f59e0b";
+          const item = document.createElement("div");
+          item.style.margin = "10px 0";
+          item.innerHTML = `
+            <div style="font-weight:500;margin-bottom:5px;font-size:0.9rem;">${pred.className}</div>
+            <div style="background:rgba(255,255,255,0.06);border-radius:8px;height:16px;overflow:hidden;">
+              <div style="background:${barColor};width:${percent}%;height:100%;transition:width 0.4s ease;border-radius:8px;"></div>
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-muted);text-align:right;margin-top:3px;">${percent}%</div>`;
+          allCont.appendChild(item);
+        });
+      }
+    } catch(err) { console.warn("Prediction failed:", err); }
+  }
+
+  // ── SMOOTH SCROLL ──
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>
