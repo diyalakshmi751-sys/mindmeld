@@ -2,7 +2,7 @@
   <img src="./img.png" alt="Project Banner" width="100%">
 </p>
 
-# [Project Name] 🎯
+# ECOSORTVISION
 
 ## Basic Details
 
@@ -16,7 +16,8 @@
 [mention your project hosted link here]
 
 ### Project Description
-[2-3 lines about what your project does]
+EcoSort Vision is an AI-based system that uses a webcam to identify and sort waste automatically. It helps improve recycling, reduce pollution, and encourages eco-friendly behavior through a points-based reward system.
+
 
 ### The Problem statement
 Improper waste segregation causes environmental pollution and reduces recycling efficiency. Manual waste sorting is time-consuming, unhygienic, and prone to errors. There is a need for an automated system that can accurately identify and sort waste using AI to improve recycling and promote sustainable waste management.
@@ -31,10 +32,9 @@ Improper waste segregation leads to pollution and inefficient recycling because 
 ### Technologies/Components Used
 
 **For Software:**
-- Languages used: [e.g., JavaScript, html, css]
-- Frameworks used: none
-- Libraries used: [tensorflow.js,techable machine)
-- Tools used: [e.g., VS Code, Git, Docker]
+- Languages used: JavaScript, html, css
+- Libraries used: teachable machine
+- Tools used:  VS Code, Git 
 
 **For Hardware:**
 - Main components: [List main components]
@@ -428,9 +428,11 @@ If you used AI tools during development, document them here for transparency:
 
 ## Team Contributions
 
-- [Name 1]: [Specific contributions - e.g., Frontend development, API integration, etc.]
-- [Name 2]: [Specific contributions - e.g., Backend development, Database design, etc.]
-- [Name 3]: [Specific contributions - e.g., UI/UX design, Testing, Documentation, etc.]
+- contribution of Team Members:
+
+Manya m: Designe: Trained the AI model, handled data collection and testing, managed the points system, and prepared the project documentation and presentation.d and developed the website interface, implemented the AI waste detection using computer vision, and integrated the real-time classification system.
+diyalakshmi: Trained the AI model, handled data collection and testing, managed the points system, and prepared the project documentation and presentation.
+
 
 ---
 
