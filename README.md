@@ -6,11 +6,11 @@
 
 ## Basic Details
 
-### Team Name: [Name]
+### Team Name: mindmeld
 
 ### Team Members
-- Member 1: [Name] - [College]
-- Member 2: [Name] - [College]
+- Member 1: MANYA M - AHALIA SCHOOL OF ENGINEERING AND TECHNOLOGY
+- Member 2: DIYALAKSHMI - AHALIA SCHOOL OF ENGINEERING AND TECHNOLOGY
 
 ### Hosted Project Link
 [mention your project hosted link here]
@@ -19,10 +19,10 @@
 [2-3 lines about what your project does]
 
 ### The Problem statement
-[What problem are you solving?]
+Improper waste segregation causes environmental pollution and reduces recycling efficiency. Manual waste sorting is time-consuming, unhygienic, and prone to errors. There is a need for an automated system that can accurately identify and sort waste using AI to improve recycling and promote sustainable waste management.
 
 ### The Solution
-[How are you solving it?]
+Improper waste segregation leads to pollution and inefficient recycling because people often throw waste in the wrong bins. Manual sorting is slow, unhygienic, and inaccurate. This project aims to use AI to automatically identify and sort waste correctly, making recycling easier and more effective
 
 ---
 
@@ -31,27 +31,45 @@
 ### Technologies/Components Used
 
 **For Software:**
-- Languages used: [e.g., JavaScript, Python, Java]
-- Frameworks used: [e.g., React, Django, Spring Boot]
-- Libraries used: [e.g., axios, pandas, JUnit]
+- Languages used: [e.g., JavaScript, html, css]
+- Frameworks used: none
+- Libraries used: [tensorflow.js,techable machine)
 - Tools used: [e.g., VS Code, Git, Docker]
 
 **For Hardware:**
 - Main components: [List main components]
 - Specifications: [Technical specifications]
-- Tools required: [List tools needed]
+- Tools required: visual studio code,git,web browser
 
 ---
 
 ## Features
 
 List the key features of your project:
-- Feature 1: [Description]
-- Feature 2: [Description]
-- Feature 3: [Description]
-- Feature 4: [Description]
+- Feature 1: AI-Based Waste Detection
+Uses real-time computer vision to automatically identify waste items such as plastic, paper, and metal using a webcam.
+The project uses artificial intelligence and computer vision to detect waste items in real time through a webcam. This allows the system to identify different types of waste accurately without any manual input from the user.
+
+
+Feature 2: Automatic Waste Classification
+Classifies detected waste into the correct category instantly without any manual sorting by the user.
+The system automatically classifies the detected waste into the correct category, such as plastic, paper, or metal. This reduces human effort, minimizes sorting errors, and improves overall recycling efficiency.
+
+
+Feature 3: Real-Time Confidence Display
+Shows live prediction results with confidence percentages to indicate how accurately the waste has been identified.
+The system shows live prediction results along with confidence percentages for each detected waste item. This helps users understand how accurately the waste has been identified and builds trust in the AI-based classification process.
+
+
+Feature 4: User Engagement with Gamification
+Encourages proper waste disposal by awarding points for correct sorting, promoting eco-friendly behavior.
+The project includes a points-based reward system that gives users points for correctly sorted waste. This feature motivates users to participate actively, promotes environmentally responsible behavior, and makes waste segregation more engaging and interactive.
+
+
 
 ---
+
+[Explain how to set up the circuit]
 
 ## Implementation
 
@@ -59,12 +77,15 @@ List the key features of your project:
 
 #### Installation
 ```bash
-[Installation commands - e.g., npm install, pip install -r requirements.txt]
+# No installation required for local demo
+# Just ensure an internet connection for loading libraries
 ```
 
 #### Run
 ```bash
-[Run commands - e.g., npm start, python app.py]
+# Open the project folder
+# Double-click index.html
+# OR open index.html using any modern web browser[Run commands - e.g., npm start, python app.py]
 ```
 
 ### For Hardware:
@@ -73,8 +94,6 @@ List the key features of your project:
 [List all components needed with specifications]
 
 #### Circuit Setup
-[Explain how to set up the circuit]
-
 ---
 
 ## Project Documentation
@@ -107,14 +126,23 @@ List the key features of your project:
 ---
 
 ### For Hardware:
+computer/laptop
+ processor:dual core orhigher
+ RAM:minimum4GB
+ Power Supply
+
+For running the computer/laptop
+
+Internet Connection
+
+Required only for loading AI libraries and model files
+ 
 
 #### Schematic & Circuit
 
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
+![Circuit]The circuit diagram shows a webcam connected to a computer system. The webcam captures live images of waste items and sends the data to the computer, where the AI-based image classification model processes the input. Since the system is software-driven and browser-based, no additional electronic components or physical wiring are required.
 
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
+![Schematic]The schematic diagram illustrates the flow of data in the system. The webcam acts as the input device, capturing images of waste materials. These images are processed by the AI model running in the web browser, which classifies the waste into appropriate categories. The output is displayed on the screen in real time along with confidence scores and user points.
 
 #### Build Photos
 
@@ -361,7 +389,7 @@ python script.py -v --format json data.json
 ## Project Demo
 
 ### Video
-[Add your demo video link here - YouTube, Google Drive, etc.]
+https://drive.google.com/file/d/1ZVIjaCcr8O2YMSyfFJoVjBTqRP8Yc_SF/view?usp=sharing
 
 *Explain what the video demonstrates - key features, user flow, technical highlights*
 
